@@ -6,31 +6,27 @@ from keras.utils import to_categorical
 
 
 # dataframe 가져오기(load)
-df = pd.read_pickle('data/morphs_article.pkl')
+df = pd.read_pickle('data/okt_cnn_dataset.pkl')
 
 # array 형태로 string sentence - > ['sentence1','sentence2','...']
-docs = np.array(df['modified_article_sentence'])
+docs = np.array(df['joined_sentence'])
 
 # Constant
 # 한 문장에 사용할 단어 갯수
-
 def sentence_length(df):
     max_length = 0
-    for word_tag_ls in df['article_modified_pos']:
+
+    for word_tag_ls in df['word_tagging']:
         if len(word_tag_ls) >= max_length:
             max_length = len(word_tag_ls)
 
     return max_length
 
+
 MAX_SEQ_LENGTH = sentence_length(df) # 최대 문장 길이
 MAX_NUM_WORDS = 15000
 
-
-
-
 def make_data():
-
-
     # tokenizer
     tokenizer = Tokenizer(num_words=MAX_NUM_WORDS)
     tokenizer.fit_on_texts(docs)

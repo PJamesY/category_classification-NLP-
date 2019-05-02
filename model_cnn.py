@@ -5,10 +5,10 @@ from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
 
 from sklearn.model_selection import train_test_split
-import make_dataset
+import make_cnn_dataset
 
 print("Loading Data ...")
-X, y, word_to_index, vocabulary = make_dataset.make_data()
+X, y, word_to_index, vocabulary = make_cnn_dataset.make_data()
 
 # X.shape -> (159119, 252)
 # y.shape -> (159119, 8)
