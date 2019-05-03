@@ -1,6 +1,7 @@
 from konlpy.tag import Okt, Kkma, Komoran
 import pandas as pd
 import csv
+import itertools
 
 article_df = pd.read_csv('data/article.csv')
 
@@ -34,17 +35,10 @@ def remove_stopwords(row):
     # stopword 외부에서 가져온것
     file = open('data/stopwords-ko.txt', 'r')
     reader = csv.reader(file)
-    allRows = [row for row in reader]
+    all_rows = [row for row in reader]
 
     # flatten list
-    stopwords = list(itertools.chain(*allRows))
-
-    # 내가 stopword를 추가한것
-    my_stopwords = ['것', '했다', '하겠습니다', '또', '있', '다', '하는', '된', '의', '그', '해야', '한다고', \
-                    '로부터', '등', '했는데', '하겠느냐', '데', '며', '하신', '고', '위해', '라며', '가겠다', '있는', '보인다', \
-                    '대해', '못', '됐다', '안', '되었기', '수', '할', '해', '뭘', '는', '한다', '이나']
-
-    stopwords = list(set(stopwords + my_stopwords))
+    stopwords = list(set(itertools.chain(*all_rows)))
 
     no_stopwords_ls = []
     for word in row:
