@@ -219,7 +219,7 @@ if __name__ == "__main__":
     time_start = time()
     time_check = time()
 
-    df = pd.read_pickle('../data/sentence.pkl')
+    df = pd.read_pickle('/data/kor2vec_sentence.pkl')
 
     word_corpus, tag_corpus, word2index, word_idx_to_tag_idx, tag2index = build_dataset()
     voca_size = len(word2index)
