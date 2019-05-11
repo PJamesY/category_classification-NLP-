@@ -69,4 +69,6 @@ print('Training_model ....')
 model.fit(X_train, y_train, batch_size=BATCH_SIZE, epochs=EPOCHS, verbose=1, callbacks=[checkpoint], validation_data=(X_test, y_test))
 
 
-print(1)
+model_json = model.to_json()
+with open("model.json", "w") as json_file :
+    json_file.write(model_json)
