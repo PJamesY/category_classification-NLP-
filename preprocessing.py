@@ -3,6 +3,7 @@ import pandas as pd
 import csv
 import itertools
 
+naver_kin_df = pd.read_pickle('data/naver_kin.pkl')
 article_df = pd.read_csv('data/article.csv')
 
 
@@ -16,7 +17,7 @@ def extract_meaning_word(row):
     meaning_word_tagging_ls = []
     # Noun : 명사 / Verb : 동사 / Adjective : 형용사
     # NNP : 고유명사 / NNG : 보통 명사 / VV : 동사 / XR : 어근 / VA : 형용사 /
-    meaning_tag_ls = ["Noun","Verb","Adjective",'NNG', 'NNP', 'VV', 'XR','VA']
+    meaning_tag_ls = ["Noun", "Verb", "Adjective", 'NNG', 'NNP', 'VV', 'XR', 'VA']
 
     for word in row:
         if word[1] in meaning_tag_ls:
@@ -64,32 +65,21 @@ def word_join(row):
 
 class PreProcessing:
 
-    def __init__(self, df=article_df, konlpy=Okt, model="LDA"):
-        """
-        :param df: 전처리를 할 데이터 프레임
-        :param konlpy: 형태소 분석기 선택 [Okt, Kkma, Komoran]
-        :param model: 사용할 머신러닝 / 딥러닝 모델 [CNN, RNN, LDA, word2vec]
-
-        """
-        self.df = df
-        self.konlpy = konlpy
-        self.model = model
-
-    def change_data_type(self, type=str):
+    def change_data_type(self, data_type=str):
         """
         dataframe의 data type을 바꿔준다
 
-        :param type: 바꾸고 싶은 type을 적는다
+        :param data_type: 바꾸고 싶은 type을 적는다
         :return: 데이터 타입이 수정된 dataframe
         """
-        self.df = self.df.astype(type)
+        self.df = self.df.astype(data_type)
 
         return self.df
 
     def drop_duplicate(self, *col):
         """
         중복되는 데이터는 지워준다
-        :param *col: 중복된 데이터들을 제거하는데 고려하는 columns
+        :param col: 중복된 데이터들을 제거하는데 고려하는 columns
         DataFrame with duplicate rows removed, optionally only considering certain columns.
         """
         # 행간의 중복 제거
@@ -138,7 +128,8 @@ class PreProcessing:
         # 양쪽 끝 white space를 delete
         self.df[self.df.columns] = self.df.apply(lambda x: x.str.strip())
 
-        self.drop_duplicate(column)
+        self.drop_duplicate([column])
+        self.df = self.df[self.df[column] != '']
         return self.df
 
     def morpheme_tagging(self, column):
@@ -155,9 +146,13 @@ class PreProcessing:
         elif self.konlpy == "Komoran":
             konlpy = Komoran()
         else:
-            raise ValueError('select in Okt, Kkma, Komoran')
+            raise ValueError('select in Okt, Kkma, Komoran (type : string)')
 
-        self.df['word_tagging'] = self.df[column].apply(lambda sentence:konlpy.pos(sentence))
+        # try:
+        self.df['word_tagging'] = self.df[column].apply(lambda sentence: konlpy.pos(sentence))
+        # except:
+        #     print('there is empty string')
+
 
         return self.df
 
@@ -168,18 +163,57 @@ class PreProcessing:
         :return: 전처리된 dataframe
         """
 
-        self.text_preprocessing(column)
+        self.text_pre_processing(column)
 
         self.morpheme_tagging(column)
+        # try:
+        if self.remove:
+            self.df['word_tagging'] = self.df['word_tagging'].apply(lambda row: extract_meaning_word(row))
+            self.df['word_tagging'] = self.df['word_tagging'].apply(lambda row: remove_stopwords(row))
 
-        self.df['word_tagging'] = self.df['word_tagging'].apply(lambda row: extract_meaning_word(row))
-        self.df['word_tagging'] = self.df['word_tagging'].apply(lambda row: remove_stopwords(row))
         self.df['joined_sentence'] = self.df['word_tagging'].apply(lambda row: word_join(row))
 
         self.df = self.df[['word_tagging', 'joined_sentence', 'category']]
 
         self.df.reset_index(inplace=True)
+
+        # except:
+        #     print('there is empty string')
+        #     pass
+
         return self.df
+
+
+class NaverKinPreProcessing(PreProcessing):
+
+    def __init__(self, df=naver_kin_df, konlpy="Okt", remove=True):
+        super(NaverKinPreProcessing, self).__init__()
+        self.df = df
+        self.konlpy = konlpy
+        self.remove = remove
+
+    def main_preprocess(self):
+
+        self.change_data_type(str)
+        self.drop_duplicate(['question'])
+        self.pre_processing('question')
+
+        return self.df
+
+
+class ArticlePreProcessing(PreProcessing):
+
+    def __init__(self, df=article_df, konlpy="Okt", remove=True):
+        """
+        :param df: 전처리를 할 데이터 프레임
+        :param konlpy: 형태소 분석기 선택 [Okt, Kkma, Komoran]
+        :param remove: stopword, 조사, 어미를 제거할지 안할지 (default : True)
+        """
+        super(ArticlePreProcessing, self).__init__()
+        self.df = df
+        self.konlpy = konlpy
+        self.remove = remove
+
 
     def title_plus_article(self):
         """
@@ -188,22 +222,22 @@ class PreProcessing:
         :return: Dataframe (column : title_article, category)
         """
         self.change_data_type(str)
-        self.drop_duplicate('title', 'article')
+        self.drop_duplicate(['title', 'article'])
 
         # title과 article을 합쳐주는 column을 만든다
         self.df["title_article"] = self.df['title'] + self.df['article']
         self.df = self.df[['title_article', 'category']]
 
-        self.preprocessing('title_article')
+        self.pre_processing('title_article')
 
     def doc2sentence(self):
         """
-        CNN, word2vec 모델에 사용
+        CNN, kor2vec 모델에 사용
         document article을 문장으로 다 쪼개서 문장 하나하나를 하나의 데이터로 받는다
         :return:
         """
         self.change_data_type(str)
-        self.drop_duplicate('title', 'article')
+        self.drop_duplicate(['title', 'article'])
 
         self.df = pd.concat([pd.DataFrame({'article': doc, 'category': row['category']}, index=[0])
                              for _, row in self.df.iterrows()
@@ -211,5 +245,12 @@ class PreProcessing:
 
         self.df = self.df[['article', 'category']]
 
-        self.preprocessing('article')
+        self.df = self.pre_processing('article')
 
+        return self.df
+
+if __name__ == '__main__':
+    df = pd.read_csv('data/article.csv')
+    preprocessing_article = ArticlePreProcessing(df, konlpy="Komoran")
+    article_sentence_data = preprocessing_article.doc2sentence()
+    article_sentence_data.to_pickle('data/article_sentence_komoran.pkl')
