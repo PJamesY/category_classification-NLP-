@@ -42,7 +42,7 @@ class CNN:
         self.channel = 1  # number of channels : embding하는 갯수(Word2vec, glovec)
         self.classes = 7  # number of class
 
-    def model_construction(self):
+    def model_construction_train(self):
         print('creating model..')
 
         # input layer
@@ -118,8 +118,8 @@ class CNN:
 
         return model
 
-    def save_model(self):
-        model = self.model_construction()
+    def train_save_model(self):
+        model = self.model_construction_train()
 
         model_json = model.to_json()
 
@@ -129,4 +129,4 @@ class CNN:
 
 if __name__ == "__main__":
     cnn_model = CNN()
-    cnn_model.save_model()
+    cnn_model.train_save_model()
