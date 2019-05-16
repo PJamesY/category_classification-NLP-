@@ -26,7 +26,7 @@ title_list = manager.list()
 article_list = manager.list()
 
 
-def make_dic_data(category,article_ls,title_ls):
+def make_dic_data(category, article_ls, title_ls):
     """
     :param category: 기사가 속한 category
     :param article_ls: 기사의 content list
@@ -36,7 +36,8 @@ def make_dic_data(category,article_ls,title_ls):
     category_list = [category for _ in range(len(title_ls))]
     data = {'title': title_ls,
             'article': article_ls,
-            'category': category_list,}
+            'category': category_list,
+            }
     return data
 
 
@@ -91,9 +92,9 @@ def crawling():
     for category, _ in category_word.items():
         pool = Pool(processes=4)
         func = partial(question_to_list, category_word[category])
-        pool.map(func, range(1,end,10))
+        pool.map(func, range(1, end, 10))
         data = make_dic_data(category, article_list, title_list)
-        df = df.append(pd.DataFrame(data), ignore_index = True)
+        df = df.append(pd.DataFrame(data), ignore_index=True)
 
         # content 다시 초기화
         title_list = manager.list()
