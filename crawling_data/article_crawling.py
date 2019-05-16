@@ -1,30 +1,18 @@
 import urllib.request
 from bs4 import BeautifulSoup
-import requests
 from multiprocessing import Pool, Manager
 import pandas as pd
 from functools import partial
 
-
 category_word = {
-    #'politics' : 'politics',
-    #'sports': 'sports',
-    # 'culture': 'culture',
-    # 'economy': 'economy',
-    # 'society': 'society',
-    # 'science': 'science',
-
-
-    #'education': 'society/schooling',
-    #'health': 'society/health',
-    #'politics':'politics/politics_general',
-    'technology':'science/technology',
-    #'it':'economy/it',
-    
-    #'sports':'sports/sports_general',
-    #'entertainment':'culture/entertainment',
-    #'travel':'culture/travel',
-
+    'education': 'society/schooling',
+    'health': 'society/health',
+    'politics': 'politics/politics_general',
+    'technology': 'science/technology',
+    'it': 'economy/it',
+    'sports': 'sports/sports_general',
+    'entertainment': 'culture/entertainment',
+    'travel': 'culture/travel',
 }
 
 # 끝 페이지
@@ -37,12 +25,12 @@ article_list = manager.list()
 
 
 def make_dic_data(category,article_ls,title_ls):
-    '''
+    """
     :param category: 기사가 속한 category
     :param article_ls: 기사의 content list
     :param title_ls: 기사의 title list
     :return: dictionary type의 데이터 반환
-    '''
+    """
     category_list = [category for _ in range(len(title_ls))]
     data = {'title': title_ls,
             'article': article_ls,
@@ -50,21 +38,15 @@ def make_dic_data(category,article_ls,title_ls):
     return data
 
 
-
 def question_to_list(category, page):
-    '''
+    """
     :param category: 기사가 속한 category
-    :param start: 크롤링할 페이지
-    '''
-
+    :param page: 크롤링할 페이지
+    """
     global article_list
     global title_list
 
     url = "http://www.hani.co.kr/arti/{}/list{}.html".format(category, page)
-
-
-
-
     response = urllib.request.urlopen(url)
     soup = BeautifulSoup(response, 'html.parser')
     results = soup.select('#section-left-scroll-in > .section-list-area > div .article-title a')
@@ -113,40 +95,8 @@ def crawling():
         title_list = manager.list()
         article_list = manager.list()
 
-
-
-
-
     df.to_csv('article11.csv')
-    # return df
-
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
     crawling()
-
-
-
-# export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
