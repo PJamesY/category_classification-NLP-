@@ -5,11 +5,12 @@ from keras.optimizers import Adam
 from keras.callbacks import ModelCheckpoint
 from sklearn.model_selection import train_test_split
 from make_cnn_dataset import MakeCnnDataset
+import numpy as np
 
 
 class CNN:
 
-    def __init__(self, embedding_dim=256, filter_size=[3, 4, 5], num_filters=512,
+    def __init__(self, embedding_dim=100, filter_size=[3, 4, 5], num_filters=512,
                  drop_rate=0.5, epochs=100, batch_size=30, pre_trained_embedding_layer=False):
         """
 
@@ -19,7 +20,7 @@ class CNN:
         :param drop_rate: drop rate
         :param pre_trained_embedding_layer: whether use embedding_layer or not (boolean)
         """
-        self.embedding_dim = embedding_dim
+        self.embedding_dim = embedding_dim  # kor2vec embedding size가 100이므로 100으로 맞춰주었다.
         self.filter_size = filter_size
         self.num_filters = num_filters
         self.drop_rate = drop_rate
@@ -47,18 +48,37 @@ class CNN:
         # input layer
         inputs = Input(shape=(self.sentence_length,), dtype='int32')
 
+        # embedding layer
         if self.pre_trained_embedding_layer:
-            pass
-            # embedding = Embedding(len(word_index) + 1,
-            #                             EMBEDDING_DIM,
-            #                             weights=[embedding_matrix],
-            #                             input_length=MAX_SEQUENCE_LENGTH,
-            #                             trainable=False)
+            # load the whole embedding into memory
+            embeddings_index = dict()
+            f = open('vectors_on_batch.txt')
+            for line in f:
+                values = line.split()
+                word = values[0]
+                coefs = np.asarray(values[1:], dtype='float32')
+                embeddings_index[word] = coefs
+            f.close()
+            print('Loaded %s word vectors.' % len(embeddings_index))
+
+            # create a weight matrix for words in training docs
+            embedding_matrix = np.zeros((self.voca_size, self.embedding_dim))
+            for word, i in self.word_to_index.items():
+                embedding_vector = embeddings_index.get(word)
+                if embedding_vector is not None:
+                    embedding_matrix[i] = embedding_vector
+
+            embedding = Embedding(self.voca_size,
+                                  self.embedding_dim,
+                                  weights=[embedding_matrix],
+                                  input_length=self.sentence_length,
+                                  trainable=False)
         else:
             embedding = Embedding(input_dim=self.voca_size,
                                   output_dim=self.embedding_dim,
                                   input_length=self.sentence_length)(inputs)
 
+        # Reshape layer
         reshape = Reshape((self.sentence_length, self.embedding_dim, self.channel))(embedding)
 
         # Convolution layer
