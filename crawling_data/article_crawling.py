@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 from multiprocessing import Pool, Manager
 import pandas as pd
 from functools import partial
+from random import randint
+import time
 
 category_word = {
     'education': 'society/schooling',
@@ -52,6 +54,7 @@ def question_to_list(category, page):
     results = soup.select('#section-left-scroll-in > .section-list-area > div .article-title a')
 
     for result in results:
+        pause = randint(1, 2)
         url_article = "http://www.hani.co.kr{}".format(result.attrs["href"])
         response = urllib.request.urlopen(url_article)
         soup_article = BeautifulSoup(response, "html.parser")
@@ -76,6 +79,7 @@ def question_to_list(category, page):
         # 각 기사의 제목과 글 list에 append
         title_list.append(title)
         article_list.append(article)
+        time.sleep(pause)
 
 
 def crawling():
