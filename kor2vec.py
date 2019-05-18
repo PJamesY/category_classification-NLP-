@@ -225,7 +225,7 @@ class Kor2Vec:
         f.write('{} {}\n'.format(tag_size-1, self.embedding_dim))
         vectors = model.get_weights()[0]
         for word, i in tag2index.items():
-            f.write('{} {}\n'.format(word, ' '.join(map(str, list(vectors[i, :])))))
+            f.write('{} {}\n'.format(word, ' '.join(map(str, list(vectors[i-1, :])))))
         f.close()
         return file_path
 
