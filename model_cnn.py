@@ -72,7 +72,7 @@ class CNN:
                                   self.embedding_dim,
                                   weights=[embedding_matrix],
                                   input_length=self.sentence_length,
-                                  trainable=False)
+                                  trainable=False)(inputs)
         else:
             embedding = Embedding(input_dim=self.voca_size,
                                   output_dim=self.embedding_dim,
